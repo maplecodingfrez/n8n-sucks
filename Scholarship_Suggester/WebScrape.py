@@ -1,20 +1,36 @@
-import requests
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 from bs4 import BeautifulSoup
-import pandas as pd
+import time
 
-#package สำหรับจัดการ html เรียกว่า BeautifulSoup
-def get_soup(url):
-    with requests.get(url) as r:
-        soup = BeautifulSoup(r.text, features='html.parser')
-    return soup
+# ตั้งค่า options สำหรับ Chrome
+options = Options()
+options.add_argument('--headless')  # รัน Chrome ในโหมดไม่แสดงหน้าต่าง
+options.add_argument('--disable-gpu')
+options.add_argument('--no-sandbox')
 
-#ดึงข้อมูล html จากเว็บไซต์มาเปลี่ยนเป็น soup
-url = f'https://findstudentship.eef.or.th/scholarship?grade=%E0%B8%97%E0%B8%B8%E0%B8%81%E0%B8%A3%E0%B8%B0%E0%B8%94%E0%B8%B1%E0%B8%9A&cost=%E0%B8%97%E0%B8%B8%E0%B8%99%E0%B8%97%E0%B8%B1%E0%B9%89%E0%B8%87%E0%B8%AB%E0%B8%A1%E0%B8%94&genre=%E0%B8%97%E0%B8%B8%E0%B8%99%E0%B9%83%E0%B8%AB%E0%B9%89%E0%B9%80%E0%B8%9B%E0%B8%A5%E0%B9%88%E0%B8%B2'
-soup = get_soup(url)
+# สร้าง instance ของ Chrome WebDriver
+driver = webdriver.Chrome(options=options)
 
-# print(soup)
+# เปิดหน้าเว็บ
+url = 'https://findstudentship.eef.or.th/scholarship?grade=ทุกระดับ&cost=ทุนทั้งหมด&genre=ทุนให้เปล่า'
+driver.get(url)
 
-# #หา tag ชื่อ div ที่มี class oldnew_p_tr
-target = soup.find('div', class_='mb-5')
+# รอให้ JavaScript โหลดข้อมูลเสร็จ (ปรับเวลาได้ตามความเหมาะสม)
+time.sleep(5)
 
-print(target)
+# ดึง HTML หลังจากที่ JavaScript โหลดข้อมูลเสร็จ
+html = driver.page_source
+
+# ปิดเบราว์เซอร์
+driver.quit()
+
+# ใช้ BeautifulSoup เพื่อวิเคราะห์ HTML
+soup = BeautifulSoup(html, 'html.parser')
+
+# ค้นหาแท็กที่มี class="mb-5"
+elements = soup.find_all(class_='mb-5')
+
+# แสดงผลลัพธ์
+for element in elements:
+    print(element.get_text(strip=True))
